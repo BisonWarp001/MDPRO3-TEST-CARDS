@@ -1,5 +1,7 @@
 --Shadow Torment - Jeroid the Dark Warper
 local s,id=GetID()
+s.listed_series={0x406}
+
 function s.initial_effect(c)
 
 	--ATK/DEF loss on summon
@@ -25,12 +27,16 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,id+100)
 	e2:SetCost(s.atkcost)
+	e2:SetTarget(s.atktg)
 	e2:SetOperation(s.atkop)
 	c:RegisterEffect(e2)
 
 end
 
+-------------------------------------------------
 --TARGET
+-------------------------------------------------
+
 function s.statstg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsFaceup() and chkc:IsLocation(LOCATION_MZONE) end
 	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
@@ -41,7 +47,10 @@ function s.statstg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 
+-------------------------------------------------
 --OPERATION
+-------------------------------------------------
+
 function s.statsop(e,tp,eg,ep,ev,re,r,rp)
 
 	local tc=Duel.GetFirstTarget()
@@ -50,21 +59,23 @@ function s.statsop(e,tp,eg,ep,ev,re,r,rp)
 	--ATK reduction
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e1:SetCode(EFFECT_UPDATE_ATTACK)
 	e1:SetValue(-800)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	tc:RegisterEffect(e1)
 
 	--DEF reduction
 	local e2=Effect.CreateEffect(e:GetHandler())
 	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e2:SetCode(EFFECT_UPDATE_DEFENSE)
 	e2:SetValue(-800)
-	e2:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+	e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 	tc:RegisterEffect(e2)
 
-	--Check result AFTER reduction
-	if tc:IsAttack(0) then
+	--Check AFTER reduction
+	if tc:GetAttack()==0 then
 		if Duel.Destroy(tc,REASON_EFFECT)>0 then
 			Duel.Damage(1-tp,1000,REASON_EFFECT)
 		end
@@ -72,24 +83,37 @@ function s.statsop(e,tp,eg,ep,ev,re,r,rp)
 
 end
 
+-------------------------------------------------
 --GY cost
+-------------------------------------------------
+
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsAbleToRemoveAsCost() end
 	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
 end
 
---Count Shadow Torment monsters
-function s.gyfilter(c)
-	return c:IsSetCard(0x406) and c:IsMonster()
+-------------------------------------------------
+--Target check
+-------------------------------------------------
+
+function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsFaceup,tp,0,LOCATION_MZONE,1,nil) end
 end
 
+-------------------------------------------------
 --GY effect
+-------------------------------------------------
+
+function s.faceupfilter(c)
+	return c:IsFaceup()
+end
+
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 
 	local ct=Duel.GetMatchingGroupCount(s.gyfilter,tp,LOCATION_GRAVE,0,nil)
 	if ct==0 then return end
 
-	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,0,LOCATION_MZONE,nil)
+	local g=Duel.GetMatchingGroup(s.faceupfilter,tp,0,LOCATION_MZONE,nil)
 	if #g==0 then return end
 
 	local val=ct*400
@@ -102,5 +126,4 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 		tc:RegisterEffect(e1)
 	end
-
 end

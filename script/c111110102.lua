@@ -8,18 +8,17 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,id+100)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
 
-	--Look at opponent's hand and discard 1
+	--If sent to GY: look opponent hand and discard
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_HANDES)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_BE_MATERIAL)
-	e2:SetCountLimit(1,id+100)
-	e2:SetCondition(s.discon)
+	e2:SetCode(EVENT_TO_GRAVE)
+	e2:SetCountLimit(1,id+200)
 	e2:SetTarget(s.distg)
 	e2:SetOperation(s.disop)
 	c:RegisterEffect(e2)
@@ -41,17 +40,7 @@ function s.spcon(e,c)
 end
 
 -------------------------------------------------
--- Discard effect condition
--------------------------------------------------
-
-function s.discon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local r=c:GetReason()
-	return (r&REASON_RELEASE)~=0 or (r&(REASON_SYNCHRO|REASON_XYZ))~=0
-end
-
--------------------------------------------------
--- Target
+-- Discard target
 -------------------------------------------------
 
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -61,7 +50,7 @@ function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 -------------------------------------------------
--- Operation
+-- Discard operation
 -------------------------------------------------
 
 function s.disop(e,tp,eg,ep,ev,re,r,rp)

@@ -47,6 +47,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
 	if tc:IsFaceup() and tc:IsRelateToEffect(e) then
+	tc:CreateRelation(c,RESET_EVENT+RESETS_STANDARD)
 		-- Disable effects
 		Duel.NegateRelatedChain(tc,RESET_TURN_SET)
 		local e1=Effect.CreateEffect(c)
@@ -112,7 +113,8 @@ end
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tg=c:GetCardTarget()
-	return tg and tg:IsExists(Card.IsLocation,1,nil,LOCATION_ONFIELD) == false
+	local tc=tg and tg:GetFirst()
+	return not tc or not tc:IsOnField()
 end
 
 function s.desop(e,tp,eg,ep,ev,re,r,rp)

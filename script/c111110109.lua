@@ -53,23 +53,27 @@ end
 -- Target Spell/Trap
 -------------------------------------------------
 
+function s.stfilter(c)
+	return c:IsType(TYPE_SPELL+TYPE_TRAP)
+end
+
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 
 	local sc=e:GetHandler():GetReasonCard()
 
 	if chkc then
-		return chkc:IsOnField()
-		and chkc:IsControler(1-tp)
-		and chkc:IsSpellTrap()
+		return chkc:IsControler(1-tp)
+		and chkc:IsOnField()
+		and s.stfilter(chkc)
 	end
 
 	if chk==0 then
 		return sc and sc:IsSummonType(SUMMON_TYPE_SYNCHRO)
-		and Duel.IsExistingTarget(Card.IsSpellTrap,tp,0,LOCATION_ONFIELD,1,nil)
+		and Duel.IsExistingTarget(s.stfilter,tp,0,LOCATION_ONFIELD,1,nil)
 	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,Card.IsSpellTrap,tp,0,LOCATION_ONFIELD,1,1,nil)
+	local g=Duel.SelectTarget(tp,s.stfilter,tp,0,LOCATION_ONFIELD,1,1,nil)
 
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 
