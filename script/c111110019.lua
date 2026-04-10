@@ -1,4 +1,4 @@
---Sacred God Slime
+--Divine God Slime
 local s,id=GetID()
 function s.initial_effect(c)
 	--fusion material
@@ -27,7 +27,7 @@ function s.initial_effect(c)
 	--triple tribute logic (REPLICA EXACTA KONAMI)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(id)
+	e0:SetCode(id) -- ID para ttfilter
 	c:RegisterEffect(e0)
 
 	local e3=Effect.CreateEffect(c)
@@ -53,23 +53,46 @@ function s.initial_effect(c)
 	e5:SetValue(SUMMON_TYPE_ADVANCE+SUMMON_VALUE_SELF)
 	c:RegisterEffect(e5)
 
-	--Target protection: Opponent cannot target monsters you control
+	--Protection: Opponent cannot destroy monsters you control with effects
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e6:SetRange(LOCATION_MZONE)
+	e6:SetTargetRange(LOCATION_MZONE,0)
+	e6:SetTarget(s.tgtg)
+	e6:SetValue(s.indval)
+	c:RegisterEffect(e6)
+
+	--Inherit: DIVINE monster unaffected by activated effects
+	local e7=Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e7:SetCode(EVENT_BE_PRE_MATERIAL)
+	e7:SetCondition(s.regcon)
+	e7:SetOperation(s.regop)
+	c:RegisterEffect(e7)
+
+	--GY Effect: Shuffle and gain 4000 LP
 	local e8=Effect.CreateEffect(c)
-	e8:SetType(EFFECT_TYPE_FIELD)
-	e8:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
-	e8:SetRange(LOCATION_MZONE)
-	e8:SetTargetRange(LOCATION_MZONE,0)
-	e8:SetTarget(s.tgtg)
-	e8:SetValue(aux.tgoval)
+	e8:SetDescription(aux.Stringid(id,1))
+	e8:SetCategory(CATEGORY_RECOVER+CATEGORY_TODECK)
+	e8:SetType(EFFECT_TYPE_QUICK_O)
+	e8:SetCode(EVENT_FREE_CHAIN)
+	e8:SetRange(LOCATION_GRAVE)
+	e8:SetCountLimit(1,id)
+	e8:SetCondition(s.lpcon)
+	e8:SetTarget(s.lptg)
+	e8:SetOperation(s.lpop)
 	c:RegisterEffect(e8)
 
-	--Inherit to DIVINE: Draw and Position Lock
-	local e9=Effect.CreateEffect(c)
-	e9:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-	e9:SetCode(EVENT_BE_PRE_MATERIAL)
-	e9:SetCondition(s.regcon)
-	e9:SetOperation(s.regop)
-	c:RegisterEffect(e9)
+	--LP Payment Detector
+	if not s.global_check then
+		s.global_check=true
+		local ge=Effect.CreateEffect(c)
+		ge:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		ge:SetCode(EVENT_PAY_LPCOST)
+		ge:SetOperation(s.lpreg)
+		Duel.RegisterEffect(ge,0)
+	end
 end
 
 --------------------------------------------------
@@ -112,7 +135,7 @@ function s.hspop(e,tp,eg,ep,ev,re,r,rp,c)
 end
 
 --------------------------------------------------
--- TRIBUTE REPLICA
+-- TRIBUTE REPLICA (LÓGICA ORIGINAL KONAMI)
 --------------------------------------------------
 
 function s.ttfilter(c,tp)
@@ -122,9 +145,7 @@ end
 function s.ttcon(e,c,minc)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	-- Permite actuar como 3 tributos solo para los monstruos de la lista
-	return minc<=3 and (s.RequireSummon(e,c) or s.RequireSet(e,c) or s.CanSummon(e,c))
-		and Duel.IsExistingMatchingCard(s.ttfilter,tp,LOCATION_MZONE,0,1,nil,tp)
+	return minc<=3 and Duel.IsExistingMatchingCard(s.ttfilter,tp,LOCATION_MZONE,0,1,nil,tp)
 end
 
 function s.ttop(e,tp,eg,ep,ev,re,r,rp,c)
@@ -154,6 +175,10 @@ function s.tgtg(e,c)
 	return not (c:IsCode(id) and c:IsFaceup())
 end
 
+function s.indval(e,re,tp)
+	return tp~=e:GetHandlerPlayer()
+end
+
 function s.regcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=c:GetReasonCard()
@@ -164,60 +189,41 @@ function s.regop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=c:GetReasonCard()
 	if not rc then return end
-
-	-- Draw Effect
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_DRAW)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
-	e1:SetCode(EVENT_DESTROYED)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCondition(s.drcon)
-	e1:SetTarget(s.drtg)
-	e1:SetOperation(s.drop)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetValue(s.efilter)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	rc:RegisterEffect(e1)
-
-	-- Position Change (Summon)
-	local g=Duel.GetMatchingGroup(Card.IsCanChangePosition,tp,0,LOCATION_MZONE,nil)
-	if #g>0 then Duel.ChangePosition(g,POS_FACEUP_ATTACK) end
-
-	-- Position Lock (Continuous)
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SET_POSITION)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetTargetRange(0,LOCATION_MZONE)
-	e2:SetValue(POS_FACEUP_ATTACK)
-	e2:SetReset(RESET_EVENT+RESETS_STANDARD)
-	rc:RegisterEffect(e2)
-
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetTargetRange(0,LOCATION_MZONE)
-	e3:SetReset(RESET_EVENT+RESETS_STANDARD)
-	rc:RegisterEffect(e3)
 end
 
-function s.drcon(e,tp,eg,ep,ev,re,r,rp)
+function s.efilter(e,re)
+	return re:IsActivated() and re:GetOwnerPlayer()~=e:GetHandlerPlayer()
+end
+
+--------------------------------------------------
+-- GY RECOVERY
+--------------------------------------------------
+
+function s.lpreg(e,tp,eg,ep,ev,re,r,rp)
+	Duel.RegisterFlagEffect(ep,id,RESET_PHASE+PHASE_END,0,1)
+end
+
+function s.lpcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetFlagEffect(tp,id)>0
+end
+
+function s.lptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsAbleToExtra() end
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,e:GetHandler(),1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,4000)
+end
+
+function s.lpop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return eg:IsExists(function(tc)
-		return tc:IsPreviousControler(1-tp) 
-			and (tc:IsReason(REASON_BATTLE) and tc:GetReasonCard()==c 
-			  or tc:IsReason(REASON_EFFECT) and re and re:GetHandler()==c)
-	end,1,nil)
-end
-
-function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetTargetPlayer(tp)
-	Duel.SetTargetParam(1)
-	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
-end
-
-function s.drop(e,tp,eg,ep,ev,re,r,rp)
-	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
-	Duel.Draw(p,d,REASON_EFFECT)
+	if c:IsRelateToEffect(e) and Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)>0 then
+		Duel.Recover(tp,4000,REASON_EFFECT)
+	end
 end

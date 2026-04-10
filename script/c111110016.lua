@@ -64,12 +64,12 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 			and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
 			and Duel.IsExistingMatchingCard(
 				s.spfilter,tp,
-				LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,
+				LOCATION_HAND+LOCATION_DECK,
 				0,1,nil,e,tp
 			)
 	end
 
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_HAND+LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,0,0)
 end
@@ -85,7 +85,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(
 		tp,aux.NecroValleyFilter(s.spfilter),
-		tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,
+		tp,LOCATION_HAND+LOCATION_DECK,
 		0,1,1,nil,e,tp
 	)
 	if #g==0 then return end
@@ -119,5 +119,5 @@ end
 -------------------------------------------------
 function s.exlimit(e,c)
 	return c:IsLocation(LOCATION_EXTRA)
-		and not c:IsCode(42166000) -- Egyptian God Slime
+		and not c:IsCode(42166000,111110017,111110019) -- Egyptian God Slime
 end

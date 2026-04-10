@@ -2,7 +2,7 @@
 local s,id=GetID()
 s.listed_series={0x54b}
 function s.initial_effect(c)
-	aux.AddCodeList(c,15771991,10000000,10000010,10000020)
+	aux.AddCodeList(c,42166000,15771991,10000000,10000010,10000020)
 	-- Activación Trap Continua
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
@@ -47,7 +47,7 @@ end
 -------------------------------------------------
 function s.slimefilter(c)
 	return c:IsAbleToRemoveAsCost() and 
-		(c:IsSetCard(0x54b) or c:IsCode(15771991))
+		(c:IsSetCard(0x54b) or c:IsCode(15771991) or c:IsCode(42166000))
 end
 
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)

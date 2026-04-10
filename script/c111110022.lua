@@ -9,11 +9,7 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetProperty(
-		EFFECT_FLAG_CANNOT_INACTIVATE
-		+EFFECT_FLAG_CANNOT_DISABLE
-		+EFFECT_FLAG_CAN_FORBIDDEN
-	)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_INACTIVATE+EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CAN_FORBIDDEN)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
@@ -50,13 +46,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	-- Prevent reapplication
 	tc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_LEAVE,0,1)
 	-- Client hint
-	tc:RegisterFlagEffect(
-		id,
-		RESET_EVENT+RESETS_STANDARD+RESET_LEAVE,
-		EFFECT_FLAG_CLIENT_HINT,
-		1,0,
-		aux.Stringid(id,2)
-	)
+	tc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_LEAVE,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,2))
 
 	-- Clean existing negations
 	tc:ResetEffect(EFFECT_DISABLE,RESET_CODE)
@@ -222,7 +212,7 @@ end
 -------------------------------------------------
 function s.apply_slifer(tc,c)
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(10000020,1))
+	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetCategory(CATEGORY_DEFCHANGE+CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e1:SetRange(LOCATION_MZONE)
