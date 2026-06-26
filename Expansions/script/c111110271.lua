@@ -59,17 +59,6 @@ function s.initial_effect(c)
     e3:SetOperation(s.sumsuc)
     c:RegisterEffect(e3)
 
-    -- Banish opponent GY and burn
-    local e4=Effect.CreateEffect(c)
-    e4:SetDescription(aux.Stringid(id,0))
-    e4:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
-    e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-    e4:SetCode(EVENT_SPSUMMON_SUCCESS)
-    e4:SetCondition(s.bancon)
-    e4:SetTarget(s.bantg)
-    e4:SetOperation(s.banop)
-    c:RegisterEffect(e4)
-
     -- Register ATK/DEF on summon
     local e5=Effect.CreateEffect(c)
     e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
@@ -108,7 +97,7 @@ function s.initial_effect(c)
     e9:SetType(EFFECT_TYPE_QUICK_O)
     e9:SetCode(EVENT_CHAINING)
     e9:SetRange(LOCATION_MZONE)
-    e9:SetCountLimit(3,id+100)
+    e9:SetCountLimit(3)
     e9:SetCondition(s.negcon)
     e9:SetTarget(s.negtg)
     e9:SetOperation(s.negop)
@@ -117,11 +106,10 @@ end
 
 -- Summon restriction
 function s.splimit(e,se,sp,st)
-    return bit.band(st,SUMMON_TYPE_FUSION)==SUMMON_TYPE_FUSION
+    return Duel.GetFlagEffect(sp,id)==0
 end
-
 function s.regcon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsSummonType(SUMMON_TYPE_FUSION)
+    return e:GetHandler():IsSummonType(SUMMON_TYPE_SPECIAL)
 end
 
 function s.regop(e,tp,eg,ep,ev,re,r,rp)
@@ -131,33 +119,6 @@ end
 -- No response when summoned
 function s.sumsuc(e,tp,eg,ep,ev,re,r,rp)
     Duel.SetChainLimitTillChainEnd(aux.FALSE)
-end
-
--- Banish opponent GY
-function s.bancon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsSummonType(SUMMON_TYPE_FUSION)
-end
-
-function s.banfilter(c)
-    return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
-end
-
-function s.bantg(e,tp,eg,ep,ev,re,r,rp,chk)
-    local g=Duel.GetMatchingGroup(s.banfilter,tp,0,LOCATION_GRAVE,nil)
-    if chk==0 then return true end
-    Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,#g,0,0)
-    Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,#g*500)
-end
-
-function s.banop(e,tp,eg,ep,ev,re,r,rp)
-    local g=Duel.GetMatchingGroup(s.banfilter,tp,0,LOCATION_GRAVE,nil)
-    if #g>0 then
-        local ct=Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
-        if ct>0 then
-            Duel.BreakEffect()
-            Duel.Damage(1-tp,ct*500,REASON_EFFECT)
-        end
-    end
 end
 
 -- Store ATK/DEF

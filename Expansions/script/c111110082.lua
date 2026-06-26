@@ -72,7 +72,7 @@ end
 
 -- Verifica el nombre original en el campo
 function s.samecodetg(e,c)
-	return c:IsOriginalCode(e:GetLabel())
+	return c:IsCode(e:GetLabel())
 end
 
 -- Niega los efectos activados basados en el nombre original
@@ -80,7 +80,7 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
 	if not rc then return end
 
-	if rc:IsOriginalCode(e:GetLabel()) then
+	if rc:IsCode(e:GetLabel()) then
 		Duel.NegateEffect(ev)
 	end
 end
